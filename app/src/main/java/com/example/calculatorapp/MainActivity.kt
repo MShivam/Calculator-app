@@ -7,9 +7,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.Math
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
@@ -34,38 +32,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onBack(view: View){
-        if (textView.text.toString().substring(0, textView.text.toString().length-1).isEmpty()){
+        var value = textView.text.toString()
+        val lastC = value[value.length - 1]
+        if (value.substring(0, value.length-1).isEmpty()){
             setTextView()
-            equalFlag = false
             onClear(view)
         }
         else {
             setTextView()
-            textView.text =
-                textView.text.toString().substring(0, textView.text.toString().length - 1)
+            textView.text = value.substring(0, value.length - 1)
+            value = textView.text.toString()
 
-            if (textView.text.toString()[textView.text.toString().length - 1].isDigit()) {
+            if (lastC == '.') {
                 lastNumeric = true
-                lastDot = isOperatorAdded(textView.text.toString())
-            } else if (textView.text.toString()[textView.text.toString().length - 1] == '.') {
+                lastDot = false
+            } else if (value[value.length - 1] == '.') {
                 lastNumeric = false
                 lastDot = true
-            } else {
+            } else if (value[value.length - 1].isDigit()) {
                 lastNumeric = true
+                lastDot = isOperatorAdded(textView.text.toString())
+            } else {
+                lastNumeric = false
                 lastDot = textView.text.toString().contains(".")
             }
             equalFlag = false
         }
+        textViewR.text = ""
     }
 
     fun onDigit(view: View){
+        textView.append((view as Button).text)
         if(equalFlag) {
-            textView.text = roundOf(textViewR.text.toString())
             setTextView()
             equalFlag = false
             onClear(view)
+            textView.append(view.text)
         }
-        textView.append((view as Button).text)
+        if (isOperatorAdded(textView.text.toString())) {
+            lastNumeric = true
+            onEqual(view)
+            equalFlag = false
+            setTextView()
+        }
         lastNumeric = true
     }
 
@@ -80,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             textView.append(".")
             lastNumeric = false
             lastDot = true
-        } else {
+        } else if (!lastNumeric&&!lastDot){
             textView.append("0.")
             lastNumeric = false
             lastDot = true
@@ -88,7 +97,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onOperator(view: View){
-        if (textView.text.toString().isEmpty() && (view as Button).text == "-") {
+        val value = textView.text.toString()
+        val c = value[value.length-1]
+        if(isOperatorAdded(value)&&lastNumeric){
+            onEqual(view)
+            textView.text = roundOf(textViewR.text.toString())
+            setTextView()
+            textView.append((view as Button).text)
+            lastNumeric = false
+            lastDot = false
+            equalFlag = false
+        }
+        if (value.isEmpty() && (view as Button).text == "-") {
             textView.text = "-"
         } else {
             if (equalFlag) {
@@ -96,7 +116,7 @@ class MainActivity : AppCompatActivity() {
                 setTextView()
                 equalFlag = false
             }
-            if (lastNumeric && !isOperatorAdded(textView.text.toString())) {
+            if (lastNumeric && !isOperatorAdded(value)) {
                 textView.append((view as Button).text)
                 lastNumeric = false
                 lastDot = false
@@ -190,7 +210,6 @@ class MainActivity : AppCompatActivity() {
                     setTextViewR()
                 }
                 equalFlag = true
-                //lastNumeric = false
 
             } catch (e: ArithmeticException) {
                 e.printStackTrace()
