@@ -23,17 +23,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
     }
 
-    fun onDigit(view: View){
-        if(equalFlag) {
-            textView.text = roundOf(textViewR.text.toString())
-            setTextView()
-            equalFlag = false
-            onClear(view)
-        }
-        textView.append((view as Button).text)
-        lastNumeric = true
-    }
-
     fun onClear(view: View){
         textView.text = ""
         textViewR.text = ""
@@ -45,44 +34,80 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onBack(view: View){
-        //textView.text = textView.text.toString().substring(0, textView.text.toString().length-1)
-        //checkExpression(textView.text.toString())
-        /*if (textView.text.toString()) {
-            lastNumeric = false
-        }*/
-        //lastNumeric = false
-        //lastDot = false
+        if (textView.text.toString().substring(0, textView.text.toString().length-1).isEmpty()){
+            setTextView()
+            equalFlag = false
+            onClear(view)
+        }
+        else {
+            setTextView()
+            textView.text =
+                textView.text.toString().substring(0, textView.text.toString().length - 1)
+
+            if (textView.text.toString()[textView.text.toString().length - 1].isDigit()) {
+                lastNumeric = true
+                lastDot = isOperatorAdded(textView.text.toString())
+            } else if (textView.text.toString()[textView.text.toString().length - 1] == '.') {
+                lastNumeric = false
+                lastDot = true
+            } else {
+                lastNumeric = true
+                lastDot = textView.text.toString().contains(".")
+            }
+            equalFlag = false
+        }
+    }
+
+    fun onDigit(view: View){
+        if(equalFlag) {
+            textView.text = roundOf(textViewR.text.toString())
+            setTextView()
+            equalFlag = false
+            onClear(view)
+        }
+        textView.append((view as Button).text)
+        lastNumeric = true
     }
 
     fun onDecimal(view: View){
-        if(equalFlag) {
-            textView.text = textViewR.text.toString()
+        if(equalFlag || textView.text.toString().isEmpty()) {
             setTextView()
-            equalFlag = false
+            onClear(view)
+            textView.text = "0."
+            lastDot = true
         }
         if (lastNumeric && !lastDot){
             textView.append(".")
+            lastNumeric = false
+            lastDot = true
+        } else {
+            textView.append("0.")
             lastNumeric = false
             lastDot = true
         }
     }
 
     fun onOperator(view: View){
-        if(equalFlag) {
-            textView.text = roundOf(textViewR.text.toString())
-            setTextView()
-            equalFlag = false
-        }
-        if (lastNumeric && !isOperatorAdded(textView.text.toString())){
-            textView.append((view as Button).text)
-            lastNumeric = false
-            lastDot = false
+        if (textView.text.toString().isEmpty() && (view as Button).text == "-") {
+            textView.text = "-"
+        } else {
+            if (equalFlag) {
+                textView.text = roundOf(textViewR.text.toString())
+                setTextView()
+                equalFlag = false
+            }
+            if (lastNumeric && !isOperatorAdded(textView.text.toString())) {
+                textView.append((view as Button).text)
+                lastNumeric = false
+                lastDot = false
+            }
         }
     }
 
     fun onEqual(view: View){
         if (textView.text.toString()[textView.text.toString().length - 1] == '%')
             lastNumeric = true
+
         if(lastNumeric){
             var value = textView.text.toString()
             var prefix = ""
@@ -175,7 +200,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun removeZeroAfterDot(result: String): String{
         var value = result
-        if(result.contains(".") && (result[result.length -1] == '0') && (result[0] != '0')){
+        if (result.toDouble() == 0.0)
+            value = "0"
+        else if((result[result.length -2] == '.') && (result[result.length -1] == '0')){
             value = result.substring(0, result.length - 2)
         }
         return value
@@ -185,7 +212,7 @@ class MainActivity : AppCompatActivity() {
         return if (value.startsWith("-")){
             false
         } else {
-            value.contains("/") || value.contains("*") || value.contains("-") || value.contains("+")
+            value.contains("/") || value.contains("*") || value.contains("-") || value.contains("+") || value.contains("%")
         }
     }
 
@@ -202,7 +229,7 @@ class MainActivity : AppCompatActivity() {
         textViewR.typeface = Typeface.DEFAULT
         textViewR.setTextColor(Color.parseColor("#989ea8"))
         textView.textSize = 45F
-        textView.typeface = Typeface.DEFAULT
+        textView.typeface = Typeface.DEFAULT_BOLD
         textView.setTextColor(Color.parseColor("#FFFFFF"))
 
     }
@@ -214,6 +241,5 @@ class MainActivity : AppCompatActivity() {
         textViewR.textSize = 45F
         textViewR.typeface = Typeface.DEFAULT_BOLD
         textViewR.setTextColor(Color.parseColor("#FFFFFF"))
-
     }
 }
