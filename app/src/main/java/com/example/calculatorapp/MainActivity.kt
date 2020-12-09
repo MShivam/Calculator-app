@@ -1,20 +1,22 @@
 package com.example.calculatorapp
 
+import android.animation.ValueAnimator
 import android.graphics.Color
 import android.graphics.Typeface
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.math.roundToInt
+
 
 class MainActivity : AppCompatActivity() {
 
     var lastNumeric: Boolean = false
     var lastDot: Boolean = false
     var equalFlag: Boolean = false
+    var animateflag: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     fun onBack(view: View){
         var value = textView.text.toString()
         val lastC = value[value.length - 1]
-        if (value.substring(0, value.length-1).isEmpty()){
+        if (value.substring(0, value.length - 1).isEmpty()){
             setTextView()
             onClear(view)
         }
@@ -62,6 +64,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onDigit(view: View){
+        animateflag = false
         textView.append((view as Button).text)
         if(equalFlag) {
             setTextView()
@@ -71,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         }
         if (isOperatorAdded(textView.text.toString())) {
             lastNumeric = true
-            onEqual(view)
+            onEqual()
             equalFlag = false
             setTextView()
         }
@@ -97,10 +100,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onOperator(view: View){
+        animateflag = false
         val value = textView.text.toString()
-        val c = value[value.length-1]
         if(isOperatorAdded(value)&&lastNumeric){
-            onEqual(view)
+            onEqual()
             textView.text = roundOf(textViewR.text.toString())
             setTextView()
             textView.append((view as Button).text)
@@ -124,7 +127,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun onEqual(view: View){
+    private fun onEqual(){
         if (textView.text.toString()[textView.text.toString().length - 1] == '%')
             lastNumeric = true
 
@@ -203,7 +206,7 @@ class MainActivity : AppCompatActivity() {
                         one = prefix + one
                     }
 
-                    textViewR.text = removeZeroAfterDot(((one.toDouble() * two.toDouble())/100).toString())
+                    textViewR.text = removeZeroAfterDot(((one.toDouble() * two.toDouble()) / 100).toString())
                     setTextViewR()
                 } else {
                     textViewR.text = textView.text.toString()
@@ -217,11 +220,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun onResult(view: View){
+        animateflag = true
+        onEqual()
+    }
+
     private fun removeZeroAfterDot(result: String): String{
         var value = result
         if (result.toDouble() == 0.0)
             value = "0"
-        else if((result[result.length -2] == '.') && (result[result.length -1] == '0')){
+        else if((result[result.length - 2] == '.') && (result[result.length - 1] == '0')){
             value = result.substring(0, result.length - 2)
         }
         return value
@@ -231,7 +239,9 @@ class MainActivity : AppCompatActivity() {
         return if (value.startsWith("-")){
             false
         } else {
-            value.contains("/") || value.contains("*") || value.contains("-") || value.contains("+") || value.contains("%")
+            value.contains("/") || value.contains("*") || value.contains("-") || value.contains("+") || value.contains(
+                "%"
+            )
         }
     }
 
@@ -250,7 +260,6 @@ class MainActivity : AppCompatActivity() {
         textView.textSize = 45F
         textView.typeface = Typeface.DEFAULT_BOLD
         textView.setTextColor(Color.parseColor("#FFFFFF"))
-
     }
 
     private fun setTextViewR(){
@@ -260,5 +269,37 @@ class MainActivity : AppCompatActivity() {
         textViewR.textSize = 45F
         textViewR.typeface = Typeface.DEFAULT_BOLD
         textViewR.setTextColor(Color.parseColor("#FFFFFF"))
+        if (animateflag) {
+            animateTextSize()
+            animateTextSizeR()
+        }
+    }
+
+    private fun animateTextSize(){
+        val startSize = 45F
+        val endSize = 30F
+        val animationDuration = 300 // Animation duration in ms
+        val animator = ValueAnimator.ofFloat(startSize, endSize)
+        animator.duration = animationDuration.toLong()
+
+        animator.addUpdateListener { valueAnimator ->
+            val animatedValue = valueAnimator.animatedValue as Float
+            textView.textSize = animatedValue
+        }
+        animator.start()
+    }
+
+    private fun animateTextSizeR(){
+        val startSize = 30F
+        val endSize = 45F
+        val animationDuration = 300 // Animation duration in ms
+        val animator = ValueAnimator.ofFloat(startSize, endSize)
+        animator.duration = animationDuration.toLong()
+
+        animator.addUpdateListener { valueAnimator ->
+            val animatedValue = valueAnimator.animatedValue as Float
+            textViewR.textSize = animatedValue
+        }
+        animator.start()
     }
 }

@@ -288,7 +288,7 @@
                 android:textSize="30sp"
                 android:background="@color/colorOrange"
                 android:textColor="@color/colorWhite"
-                android:onClick="onEqual"/>
+                android:onClick="onResult"/>
 
         </LinearLayout>
 
