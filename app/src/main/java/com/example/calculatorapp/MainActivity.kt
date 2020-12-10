@@ -16,7 +16,6 @@ class MainActivity : AppCompatActivity() {
     var lastNumeric: Boolean = false
     var lastDot: Boolean = false
     var equalFlag: Boolean = false
-    var animateflag: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +63,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onDigit(view: View){
-        animateflag = false
         textView.append((view as Button).text)
         if(equalFlag) {
             setTextView()
@@ -100,7 +98,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onOperator(view: View){
-        animateflag = false
         val value = textView.text.toString()
         if(isOperatorAdded(value)&&lastNumeric){
             onEqual()
@@ -221,8 +218,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onResult(view: View){
-        animateflag = true
         onEqual()
+        animateTextSize()
+        animateTextSizeR()
     }
 
     private fun removeZeroAfterDot(result: String): String{
@@ -269,10 +267,6 @@ class MainActivity : AppCompatActivity() {
         textViewR.textSize = 45F
         textViewR.typeface = Typeface.DEFAULT_BOLD
         textViewR.setTextColor(Color.parseColor("#FFFFFF"))
-        if (animateflag) {
-            animateTextSize()
-            animateTextSizeR()
-        }
     }
 
     private fun animateTextSize(){
