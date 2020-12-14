@@ -1,2 +1,2 @@
 # Calculator-App
-a standard android calculator application
+a modern android calculator application

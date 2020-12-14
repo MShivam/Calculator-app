@@ -14,9 +14,9 @@ import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
-    var lastNumeric: Boolean = false
-    var lastDot: Boolean = false
-    var equalFlag: Boolean = false
+    private var lastNumeric: Boolean = false
+    private var lastDot: Boolean = false
+    private var equalFlag: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 equalFlag = false
             }
-            textViewR.text = ""
+            textViewResult.text = ""
         }
     }
 
@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
         }
         if (isOperatorAdded(textView.text.toString())) {
             lastNumeric = true
-            onEqual()
+            equal()
             equalFlag = false
             setTextView()
         }
@@ -96,56 +96,64 @@ class MainActivity : AppCompatActivity() {
 
     fun onOperator(view: View){
         val value = textView.text.toString()
-        if(isOperatorAdded(value)&&lastNumeric){
-            onEqual()
-            textView.text = roundOf(textViewR.text.toString())
+        val operator = (view as Button).text
+        if (isOperatorAdded(value) && lastNumeric) {
+            equal()
+            textView.text = roundOf(textViewResult.text.toString())
             setTextView()
-            textView.append((view as Button).text)
+            textView.append(view.text)
             lastNumeric = false
             lastDot = false
             equalFlag = false
         }
-        if (value.isEmpty() && (view as Button).text == "\u2212") {
-            textView.text = "\u2212"
+        if (isOperatorAdded(textView.text.toString()) && !lastNumeric && operator == "−") {
+            if (textView.text.toString()[textView.text.toString().length-1] == '-')
+                return
+            if (textView.text.toString()[textView.text.toString().length-1] != '−')
+                textView.append("-")
+        }
+        if (value.isEmpty() && operator == "−") {
+            textView.text = "-"
         } else {
             if (equalFlag) {
-                textView.text = roundOf(textViewR.text.toString())
+                textView.text = roundOf(textViewResult.text.toString())
                 setTextView()
                 equalFlag = false
             }
             if (lastNumeric && !isOperatorAdded(value)) {
-                textView.append((view as Button).text)
+                textView.append(view.text)
                 lastNumeric = false
                 lastDot = false
             }
         }
+
     }
 
-    private fun onEqual(){
-        if (textView.text.toString()[textView.text.toString().length - 1] == '%')
+    fun onResult(view: View){
+        var value = textView.text.toString()
+        if (value == "-" || value[value.length-1] == '-' || value[value.length-1] == '−')
+            return
+        equal()
+        animateTextSize()
+        animateTextSizeResult()
+    }
+
+    private fun equal(){
+        var value = textView.text.toString()
+
+        if (value[value.length - 1] == '%')
             lastNumeric = true
 
         if(lastNumeric){
-            var value = textView.text.toString()
-            var prefix = ""
             try {
-                if (value.startsWith("\u2212")){
-                    prefix = "\u2212"
-                    value = value.substring(1)
-                }
-
-                if (value.contains("\u2212")){
-                    val splitValue = value.split("\u2212")
+                if (value.contains("−")){
+                    val splitValue = value.split("−")
 
                     var one = splitValue[0]
                     var two = splitValue[1]
 
-                    if (prefix.isNotEmpty()){
-                        one = prefix + one
-                    }
-
-                    textViewR.text = removeZeroAfterDot((one.toDouble() - two.toDouble()).toString())
-                    setTextViewR()
+                    textViewResult.text = removeZeroAfterDot((one.toDouble() - two.toDouble()).toString())
+                    settextViewResult()
 
                 } else if (value.contains("+")){
                     val splitValue = value.split("+")
@@ -153,38 +161,26 @@ class MainActivity : AppCompatActivity() {
                     var one = splitValue[0]
                     var two = splitValue[1]
 
-                    if (prefix.isNotEmpty()){
-                        one = prefix + one
-                    }
+                    textViewResult.text = removeZeroAfterDot((one.toDouble() + two.toDouble()).toString())
+                    settextViewResult()
 
-                    textViewR.text = removeZeroAfterDot((one.toDouble() + two.toDouble()).toString())
-                    setTextViewR()
-
-                } else if (value.contains("\u00F7")){
-                    val splitValue = value.split("\u00F7")
+                } else if (value.contains("÷")){
+                    val splitValue = value.split("÷")
 
                     var one = splitValue[0]
                     var two = splitValue[1]
 
-                    if (prefix.isNotEmpty()){
-                        one = prefix + one
-                    }
+                    textViewResult.text = removeZeroAfterDot((one.toDouble() / two.toDouble()).toString())
+                    settextViewResult()
 
-                    textViewR.text = removeZeroAfterDot((one.toDouble() / two.toDouble()).toString())
-                    setTextViewR()
-
-                } else if (value.contains("\u00D7")){
-                    val splitValue = value.split("\u00D7")
+                } else if (value.contains("×")){
+                    val splitValue = value.split("×")
 
                     var one = splitValue[0]
                     var two = splitValue[1]
 
-                    if (prefix.isNotEmpty()){
-                        one = prefix + one
-                    }
-
-                    textViewR.text = removeZeroAfterDot((one.toDouble() * two.toDouble()).toString())
-                    setTextViewR()
+                    textViewResult.text = removeZeroAfterDot((one.toDouble() * two.toDouble()).toString())
+                    settextViewResult()
 
                 } else if (value.contains("%")){
                     val splitValue = value.split("%")
@@ -195,16 +191,11 @@ class MainActivity : AppCompatActivity() {
                     if(two.isEmpty()){
                         two = "1"
                     }
-
-                    if (!prefix.isEmpty()){
-                        one = prefix + one
-                    }
-
-                    textViewR.text = removeZeroAfterDot(((one.toDouble() * two.toDouble()) / 100).toString())
-                    setTextViewR()
+                    textViewResult.text = removeZeroAfterDot(((one.toDouble() * two.toDouble()) / 100).toString())
+                    settextViewResult()
                 } else {
-                    textViewR.text = textView.text.toString()
-                    setTextViewR()
+                    textViewResult.text = textView.text.toString()
+                    settextViewResult()
                 }
                 equalFlag = true
 
@@ -212,12 +203,6 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
-    }
-
-    fun onResult(view: View){
-        onEqual()
-        animateTextSize()
-        animateTextSizeR()
     }
 
     private fun removeZeroAfterDot(result: String): String{
@@ -231,10 +216,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun isOperatorAdded(value: String): Boolean{
-        return if (value.startsWith("\u2212")){
+        return if (value.startsWith("−")){
             false
         } else {
-            value.contains("\u00F7") || value.contains("\u00D7") || value.contains("\u2212") || value.contains("+") || value.contains(
+            value.contains("÷") || value.contains("×") || value.contains("−") || value.contains("+") || value.contains(
                 "%"
             )
         }
@@ -250,7 +235,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun clearTextView(){
         textView.text = ""
-        textViewR.text = ""
+        textViewResult.text = ""
         textView.textSize = 45F
         textView.setTextColor(Color.parseColor("#FFFFFF"))
         lastNumeric = false
@@ -259,21 +244,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setTextView(){
-        textViewR.textSize = 30F
-        textViewR.typeface = Typeface.DEFAULT
-        textViewR.setTextColor(Color.parseColor("#989ea8"))
+        textViewResult.textSize = 30F
+        textViewResult.typeface = Typeface.DEFAULT
+        textViewResult.setTextColor(Color.parseColor("#989ea8"))
         textView.textSize = 45F
         textView.typeface = Typeface.DEFAULT
         textView.setTextColor(Color.parseColor("#FFFFFF"))
     }
 
-    private fun setTextViewR(){
+    private fun settextViewResult(){
         textView.textSize = 30F
         textView.typeface = Typeface.DEFAULT
         textView.setTextColor(Color.parseColor("#989ea8"))
-        textViewR.textSize = 45F
-        textViewR.typeface = Typeface.DEFAULT
-        textViewR.setTextColor(Color.parseColor("#FFFFFF"))
+        textViewResult.textSize = 45F
+        textViewResult.typeface = Typeface.DEFAULT
+        textViewResult.setTextColor(Color.parseColor("#FFFFFF"))
     }
 
     private fun animateTextSize(){
@@ -290,8 +275,8 @@ class MainActivity : AppCompatActivity() {
         animator.start()
     }
 
-    private fun animateTextSizeR(){
-        textViewR.typeface = Typeface.DEFAULT_BOLD
+    private fun animateTextSizeResult(){
+        textViewResult.typeface = Typeface.DEFAULT_BOLD
 
         val startSize = 30F
         val endSize = 45F
@@ -301,19 +286,19 @@ class MainActivity : AppCompatActivity() {
 
         animator.addUpdateListener { valueAnimator ->
             val animatedValue = valueAnimator.animatedValue as Float
-            textViewR.textSize = animatedValue
+            textViewResult.textSize = animatedValue
         }
         animator.start()
     }
 
     private fun clearAnimation() {
-        if (textView.text.toString().isNotEmpty() || textViewR.text.toString().isNotEmpty()) {
+        if (textView.text.toString().isNotEmpty() || textViewResult.text.toString().isNotEmpty()) {
             val animation = AlphaAnimation(0f, 1f)
             animation.duration = 150
             animation.startOffset = 150
             animation.fillAfter = true
             textView.startAnimation(animation)
-            textViewR.startAnimation(animation)
+            textViewResult.startAnimation(animation)
         }
     }
 }
